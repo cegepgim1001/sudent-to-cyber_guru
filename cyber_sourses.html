@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Intelligence Hub</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Chosen Palette: Warm Professional -->
+    <!-- Application Structure Plan: 
+         1. Header: Simple branding "Cyber Intelligence Hub".
+         2. Intro Section: Sets the context about the complexity of sources.
+         3. Main Dashboard (Grid Layout):
+            - Left/Top Panel: Category Navigation (News, Investigative, Enterprise, Official, Maps).
+            - Center Panel: Dynamic Source Cards (Detailed view of sources).
+            - Right/Bottom Panel: Interactive "Landscape Map" (Scatter plot) and "Recommender" tool.
+         4. Footer: Simple credits.
+         
+         Rationale: The dashboard structure allows users to jump between "types" of intelligence (the primary mental model of the report) while the scatter plot visually reinforces the trade-off between "Speed" and "Depth".
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Interactive Source Cards: 
+            - Goal: Inform. 
+            - Method: HTML/Tailwind Cards. 
+            - Interaction: Filter by category. 
+            - Why: Text-heavy content needs structured readability.
+         
+         2. Source Landscape Map (Scatter Plot):
+            - Goal: Relationships.
+            - Method: Chart.js Scatter Chart.
+            - Interaction: Clicking a point filters the card list; Visualizes "Speed vs. Depth".
+            - Why: Helps users understand *where* a source fits in their workflow (e.g., "I need fast news" vs "I need deep analysis").
+            
+         3. Intelligence Recommender (Checklist):
+            - Goal: Guide/Action.
+            - Method: JS Logic + HTML Form.
+            - Interaction: Checkboxes -> Recommended List.
+            - Why: Directly answers the "Summary Recommendation" section of the report.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        stone: {
+                            50: '#fafaf9',
+                            100: '#f5f5f4',
+                            800: '#292524',
+                            900: '#1c1917',
+                        },
+                        sky: {
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #fafaf9; /* Warm neutral background */
+            color: #292524;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* Constraint */
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-sky-200 selection:text-sky-900">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-stone-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="h-8 w-8 bg-sky-600 rounded-lg flex items-center justify-center text-white font-bold shadow-sm">CI</div>
+                <h1 class="text-xl font-bold tracking-tight text-stone-900">Cyber Intelligence Hub</h1>
+            </div>
+            <div class="text-sm text-stone-500 hidden sm:block">Professional Source Tracker 2025</div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Intro Section -->
+        <section class="max-w-3xl mx-auto text-center space-y-4">
+            <h2 class="text-3xl font-bold text-stone-900">Navigate the Threat Landscape</h2>
+            <p class="text-lg text-stone-600 leading-relaxed">
+                Finding the "best" source depends on your immediate need. Are you looking for 
+                <span class="font-semibold text-sky-700">breaking alerts</span>, 
+                <span class="font-semibold text-sky-700">deep forensics</span>, or 
+                <span class="font-semibold text-sky-700">strategic analysis</span>? 
+                Use this interactive hub to identify the right intelligence sources for your role.
+            </p>
+        </section>
+
+        <!-- Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Column: Navigation & Filters -->
+            <div class="lg:col-span-3 space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-4">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-4">Source Categories</h3>
+                    <nav class="space-y-1" id="category-nav">
+                        <!-- Nav items injected by JS -->
+                    </nav>
+                </div>
+
+                <!-- Recommender Tool -->
+                <div class="bg-stone-100 rounded-xl p-5 border border-stone-200">
+                    <h3 class="font-bold text-stone-800 mb-3 flex items-center gap-2">
+                        <span>⚡</span> Quick Recommender
+                    </h3>
+                    <p class="text-sm text-stone-600 mb-4">What is your primary goal right now?</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-white transition-colors">
+                            <input type="radio" name="goal" value="daily" class="text-sky-600 focus:ring-sky-500" onchange="updateRecommendation(this.value)">
+                            <span class="text-sm font-medium">Daily Habit / Updates</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-white transition-colors">
+                            <input type="radio" name="goal" value="alert" class="text-sky-600 focus:ring-sky-500" onchange="updateRecommendation(this.value)">
+                            <span class="text-sm font-medium">Critical Alerts / Patching</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-white transition-colors">
+                            <input type="radio" name="goal" value="deep" class="text-sky-600 focus:ring-sky-500" onchange="updateRecommendation(this.value)">
+                            <span class="text-sm font-medium">Understanding the "Who"</span>
+                        </label>
+                         <label class="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-white transition-colors">
+                            <input type="radio" name="goal" value="viz" class="text-sky-600 focus:ring-sky-500" onchange="updateRecommendation(this.value)">
+                            <span class="text-sm font-medium">Visualizing Threats</span>
+                        </label>
+                    </div>
+                    <div id="recommendation-result" class="mt-4 pt-4 border-t border-stone-200 hidden">
+                        <p class="text-xs text-stone-500 uppercase font-bold mb-1">Recommended Source:</p>
+                        <a href="#" id="rec-link" target="_blank" class="text-sky-700 font-bold hover:underline block">Source Name</a>
+                        <p id="rec-desc" class="text-xs text-stone-600 mt-1">Description goes here.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Column: Content & List -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-stone-900" id="section-title">All Sources</h3>
+                    <span class="text-xs font-medium px-2 py-1 bg-stone-100 rounded-full text-stone-500" id="source-count">8 Sources</span>
+                </div>
+                
+                <div id="cards-container" class="space-y-4">
+                    <!-- Cards injected by JS -->
+                </div>
+            </div>
+
+            <!-- Right Column: Visualization -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5">
+                    <div class="mb-4">
+                        <h3 class="font-bold text-stone-900">Source Landscape Map</h3>
+                        <p class="text-xs text-stone-500 mt-1">Mapping Speed vs. Depth of Analysis. Click a point to filter.</p>
+                    </div>
+                    
+                    <!-- Chart Container -->
+                    <div class="chart-container">
+                        <canvas id="landscapeChart"></canvas>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-2 gap-2 text-xs text-stone-500">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-sky-500"></span> Breaking News
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-purple-500"></span> Investigative
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-orange-500"></span> Enterprise
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-slate-500"></span> Official
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div class="bg-sky-50 rounded-xl p-5 border border-sky-100">
+                    <h4 class="font-bold text-sky-900 mb-2 text-sm">Why Diversify?</h4>
+                    <p class="text-sm text-sky-800 leading-relaxed">
+                        Relying on a single source creates blind spots. Security professionals typically layer 
+                        <span class="font-semibold">daily news</span> for awareness, 
+                        <span class="font-semibold">official alerts</span> for action, and 
+                        <span class="font-semibold">investigative reporting</span> for context.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-stone-50 border-t border-stone-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm text-stone-500">Generated from "Professional Sources for Cyber Attack Intelligence" Report.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Data Source ---
+        const sourcesData = [
+            {
+                id: 'bleeping',
+                name: 'BleepingComputer',
+                category: 'Breaking News',
+                catId: 'news',
+                url: 'https://www.bleepingcomputer.com/',
+                bestFor: 'Daily updates, ransomware tracking, rapid reporting',
+                why: 'The go-to site for IT pros. Often breaks ransomware stories first with technical details (file extensions, etc.) useful for admins.',
+                metrics: { x: 9.5, y: 6 } // x=Speed, y=Depth
+            },
+            {
+                id: 'hacker-news',
+                name: 'The Hacker News',
+                category: 'Breaking News',
+                catId: 'news',
+                url: 'https://thehackernews.com/',
+                bestFor: 'Broad overview, global landscape',
+                why: 'Massive following. Aggregates significant breaches. Less "nitty-gritty" than BleepingComputer, but excellent for keeping a pulse on the industry.',
+                metrics: { x: 9, y: 4 }
+            },
+            {
+                id: 'krebs',
+                name: 'KrebsOnSecurity',
+                category: 'Investigative',
+                catId: 'investigative',
+                url: 'https://krebsonsecurity.com/',
+                bestFor: 'Deep dives, cybercrime gangs, attribution',
+                why: 'Legendary blog by Brian Krebs. Investigates the *human* element and underground economy behind the attacks.',
+                metrics: { x: 3, y: 10 }
+            },
+            {
+                id: 'dark-reading',
+                name: 'Dark Reading',
+                category: 'Enterprise Analysis',
+                catId: 'enterprise',
+                url: 'https://www.darkreading.com/',
+                bestFor: 'CISOs, security managers, enterprise defense',
+                why: 'Focuses on the "So what?". Explains how vulnerabilities affect business operations, compliance, and strategy.',
+                metrics: { x: 6, y: 8 }
+            },
+            {
+                id: 'cisa',
+                name: 'CISA (Official)',
+                category: 'Official Alerts',
+                catId: 'official',
+                url: 'https://www.cisa.gov/shields-up',
+                bestFor: 'Verified alerts, KEV Catalog',
+                why: 'The "Source of Truth". Issues official government guidance. The Known Exploited Vulnerabilities (KEV) catalog is essential for network management.',
+                metrics: { x: 5, y: 9.5 } // High authority/impact
+            },
+            {
+                id: 'checkpoint',
+                name: 'Check Point ThreatCloud',
+                category: 'Real-Time Maps',
+                catId: 'maps',
+                url: 'https://threatmap.checkpoint.com/',
+                bestFor: 'Visualizing attacks in real-time',
+                why: 'Used for SOC screens and visualizations to "see" attacks happening globally.',
+                metrics: { x: 10, y: 2 } // Purely visual/fast, low depth text
+            },
+            {
+                id: 'fortinet',
+                name: 'Fortinet Threat Map',
+                category: 'Real-Time Maps',
+                catId: 'maps',
+                url: 'https://threatmap.fortiguard.com/',
+                bestFor: 'Visualizing attacks in real-time',
+                why: 'Alternative visualization for SOC environments.',
+                metrics: { x: 9.8, y: 2 }
+            },
+            {
+                id: 'netscout',
+                name: 'Netscout Horizon',
+                category: 'Real-Time Maps',
+                catId: 'maps',
+                url: 'https://horizon.netscout.com/',
+                bestFor: 'Visualizing global DDoS & traffic',
+                why: 'High-level view of internet traffic and attack patterns.',
+                metrics: { x: 9.7, y: 2 }
+            }
+        ];
+
+        // --- State Management ---
+        let currentCategory = 'all';
+        let chartInstance = null;
+
+        // --- Categories Config ---
+        const categories = [
+            { id: 'all', label: 'All Sources', icon: '🌐' },
+            { id: 'news', label: 'Breaking News', icon: '⚡' },
+            { id: 'investigative', label: 'Investigative', icon: '🕵️' },
+            { id: 'enterprise', label: 'Enterprise', icon: '🏢' },
+            { id: 'official', label: 'Official Alerts', icon: '🏛️' },
+            { id: 'maps', label: 'Threat Maps', icon: '🗺️' }
+        ];
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderNav();
+            renderContent('all');
+            initChart();
+        });
+
+        // --- UI Rendering Functions ---
+
+        function renderNav() {
+            const navContainer = document.getElementById('category-nav');
+            navContainer.innerHTML = categories.map(cat => `
+                <button 
+                    onclick="filterCategory('${cat.id}')"
+                    class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-3 ${currentCategory === cat.id ? 'bg-sky-50 text-sky-700' : 'text-stone-600 hover:bg-stone-50'}"
+                    id="nav-btn-${cat.id}"
+                >
+                    <span>${cat.icon}</span>
+                    ${cat.label}
+                </button>
+            `).join('');
+        }
+
+        function filterCategory(catId) {
+            currentCategory = catId;
+            
+            // Update Nav Styling
+            document.querySelectorAll('#category-nav button').forEach(btn => {
+                btn.className = 'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-3 text-stone-600 hover:bg-stone-50';
+            });
+            const activeBtn = document.getElementById(`nav-btn-${catId}`);
+            if(activeBtn) activeBtn.className = 'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-3 bg-sky-50 text-sky-700 border border-sky-100';
+
+            renderContent(catId);
+            updateChartHighlight(catId);
+        }
+
+        function renderContent(catId) {
+            const container = document.getElementById('cards-container');
+            const filteredData = catId === 'all' 
+                ? sourcesData 
+                : sourcesData.filter(s => s.catId === catId);
+
+            // Update Header
+            const catLabel = categories.find(c => c.id === catId).label;
+            document.getElementById('section-title').innerText = catLabel;
+            document.getElementById('source-count').innerText = `${filteredData.length} Source${filteredData.length !== 1 ? 's' : ''}`;
+
+            // Render Cards
+            container.innerHTML = filteredData.map(source => `
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 hover:border-sky-300 transition-colors group">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wide text-sky-600 mb-1 block">${source.category}</span>
+                            <h3 class="text-lg font-bold text-stone-900 group-hover:text-sky-700 transition-colors">
+                                <a href="${source.url}" target="_blank">${source.name} <span class="text-stone-400 text-sm ml-1">↗</span></a>
+                            </h3>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="inline-block bg-stone-100 text-stone-600 text-xs px-2 py-1 rounded border border-stone-200 font-medium">
+                            Target: ${source.bestFor.split(',')[0]}...
+                        </span>
+                    </div>
+
+                    <p class="text-sm text-stone-600 leading-relaxed mb-4">
+                        <span class="font-semibold text-stone-800">Why it's top-tier:</span> ${source.why}
+                    </p>
+
+                    <div class="pt-3 border-t border-stone-100 flex items-center justify-between text-xs text-stone-500">
+                        <span>Best For: ${source.bestFor}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- Recommendation Logic ---
+        function updateRecommendation(goal) {
+            const resultBox = document.getElementById('recommendation-result');
+            const link = document.getElementById('rec-link');
+            const desc = document.getElementById('rec-desc');
+            
+            resultBox.classList.remove('hidden');
+
+            let recommendedId = '';
+            
+            switch(goal) {
+                case 'daily':
+                    recommendedId = 'bleeping'; // Summary Recommendation
+                    break;
+                case 'alert':
+                    recommendedId = 'cisa'; // Summary Recommendation
+                    break;
+                case 'deep':
+                    recommendedId = 'krebs'; // Summary Recommendation
+                    break;
+                case 'viz':
+                    recommendedId = 'checkpoint';
+                    break;
+            }
+
+            const source = sourcesData.find(s => s.id === recommendedId);
+            if (source) {
+                link.innerText = source.name;
+                link.href = source.url;
+                desc.innerText = source.bestFor;
+                
+                // Also highlight in chart
+                filterCategory(source.catId);
+            }
+        }
+
+        // --- Chart.js Implementation ---
+        function initChart() {
+            const ctx = document.getElementById('landscapeChart').getContext('2d');
+            
+            const datasets = [
+                {
+                    label: 'Breaking News',
+                    data: sourcesData.filter(s => s.catId === 'news').map(s => ({x: s.metrics.x, y: s.metrics.y, source: s})),
+                    backgroundColor: '#0ea5e9', // Sky 500
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: 'Investigative',
+                    data: sourcesData.filter(s => s.catId === 'investigative').map(s => ({x: s.metrics.x, y: s.metrics.y, source: s})),
+                    backgroundColor: '#a855f7', // Purple 500
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: 'Enterprise',
+                    data: sourcesData.filter(s => s.catId === 'enterprise').map(s => ({x: s.metrics.x, y: s.metrics.y, source: s})),
+                    backgroundColor: '#f97316', // Orange 500
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: 'Official',
+                    data: sourcesData.filter(s => s.catId === 'official').map(s => ({x: s.metrics.x, y: s.metrics.y, source: s})),
+                    backgroundColor: '#64748b', // Slate 500
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: 'Maps',
+                    data: sourcesData.filter(s => s.catId === 'maps').map(s => ({x: s.metrics.x, y: s.metrics.y, source: s})),
+                    backgroundColor: '#ef4444', // Red 500
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }
+            ];
+
+            chartInstance = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }, // Custom legend used in HTML
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const source = context.raw.source;
+                                    return source.name;
+                                }
+                            },
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#1c1917',
+                            bodyColor: '#44403c',
+                            borderColor: '#e7e5e4',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: true
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Update Frequency / Speed' },
+                            min: 0,
+                            max: 11,
+                            grid: { display: false },
+                            ticks: { display: false } // Abstract scale
+                        },
+                        y: {
+                            title: { display: true, text: 'Depth of Analysis / Authority' },
+                            min: 0,
+                            max: 11,
+                            grid: { color: '#f5f5f4' },
+                            ticks: { display: false }
+                        }
+                    },
+                    onClick: (e, activeEls) => {
+                        if (activeEls.length > 0) {
+                            const datasetIndex = activeEls[0].datasetIndex;
+                            const dataIndex = activeEls[0].index;
+                            const source = chartInstance.data.datasets[datasetIndex].data[dataIndex].source;
+                            
+                            // Filter list to this item's category or specific item
+                            filterCategory(source.catId);
+                            
+                            // Scroll to top of list
+                            document.getElementById('cards-container').scrollIntoView({ behavior: 'smooth' });
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChartHighlight(catId) {
+            if (!chartInstance) return;
+
+            chartInstance.data.datasets.forEach(dataset => {
+                // If catId is 'all', everything is opacity 1
+                // If catId matches dataset category, opacity 1
+                // Else opacity 0.1
+                const isMatch = catId === 'all' || 
+                    (catId === 'news' && dataset.label === 'Breaking News') ||
+                    (catId === 'investigative' && dataset.label === 'Investigative') ||
+                    (catId === 'enterprise' && dataset.label === 'Enterprise') ||
+                    (catId === 'official' && dataset.label === 'Official') ||
+                    (catId === 'maps' && dataset.label === 'Maps');
+
+                dataset.backgroundColor = dataset.backgroundColor.replace(/[^,]+(?=\))/, isMatch ? '1' : '0.1');
+                
+                // Parse hex to rgba for detailed control if needed, but simple replacement works for standard hex colors if we switch to rgba strings in setup. 
+                // Since I used Hex, let's just toggle colors to grey.
+                if (!isMatch) {
+                    dataset.originalColor = dataset.originalColor || dataset.backgroundColor;
+                    dataset.backgroundColor = '#e5e7eb'; // Grey 200
+                } else {
+                    if (dataset.originalColor) dataset.backgroundColor = dataset.originalColor;
+                }
+            });
+
+            chartInstance.update();
+        }
+
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity Specialist Certificate | Interactive Guide</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Secure Slate & Indigo
+         Background: bg-slate-50 (Light, Professional)
+         Primary Text: text-slate-800
+         Accents: Indigo (Trust, Technology), Rose (Alerts/Threats)
+    -->
+
+    <!-- Application Structure Plan:
+         1. Hero Section: Hook based on the "Next Step" concept from the script.
+         2. Threat Landscape: 3-column grid showing WHY this matters (Ransomware, Talent Gap).
+         3. Interactive Curriculum: Split view. Left: Chart showing hour distribution. Right: Dynamic details of the selected phase.
+            - Rationale: The text file is a list of hours. Users need to see where the effort goes (e.g., 180 hours in Capstone is huge).
+         4. Pathway Simulator: Two buttons (Network Admin / Software Dev).
+            - Interaction: Clicking one filters the benefits and career outcomes specific to that student profile.
+            - Rationale: The script explicitly addresses these two audiences.
+         5. Logistics & CTA: Footer with FT/PT options.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Curriculum Distribution (Doughnut Chart):
+            - Goal: Inform users about the balance of theory vs. practice.
+            - Viz: Chart.js Doughnut.
+            - Interaction: Clicking a segment updates the text description.
+            - Justification: Best for showing part-to-whole relationships (Hours per phase).
+         2. Course Intensity (Bar Chart):
+            - Goal: Compare the weight of different courses.
+            - Viz: Chart.js Horizontal Bar.
+            - Justification: "Ethical Hacker" and "Capstone" are massive chunks. A bar chart highlights this scale difference effectively.
+         3. Dynamic Text Cards:
+            - Goal: Contextualize the "NetAdmin vs Dev" benefits.
+            - Method: Vanilla JS DOM manipulation.
+            - Justification: Immediate feedback for the user's specific persona.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        /* Custom Chart Container Styles */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        .nav-active {
+            border-bottom: 2px solid #4f46e5;
+            color: #4f46e5;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-700">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-indigo-700 tracking-tight">Cybersecurity Specialist Certificate</span>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center">
+                    <button onclick="scrollToSection('mission')" class="text-slate-600 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors">Mission</button>
+                    <button onclick="scrollToSection('curriculum')" class="text-slate-600 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors">Curriculum</button>
+                    <button onclick="scrollToSection('pathways')" class="text-slate-600 hover:text-indigo-600 px-3 py-2 text-sm font-medium transition-colors">Career Pathways</button>
+                    <button onclick="scrollToSection('logistics')" class="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors">Join Program</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="space-y-16 pb-20">
+
+        <!-- Hero Section -->
+        <section id="mission" class="relative bg-white border-b border-slate-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mb-6">
+                        New Pathway Launch
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-6">
+                        From Student to <span class="text-indigo-600">Cyber Defender</span>.
+                    </h1>
+                    <p class="text-lg text-slate-600 mb-8 leading-relaxed">
+                        A specialized 675-hour certificate designed to upskill Network Administration and Software Development students into high-demand security roles. Bridge the gap between general IT and specialized Cyber Defense.
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <button onclick="scrollToSection('pathways')" class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-lg hover:shadow-xl">
+                            Simulate Your Career
+                        </button>
+                        <button onclick="scrollToSection('curriculum')" class="px-6 py-3 bg-white text-slate-700 border border-slate-300 rounded-lg font-semibold hover:bg-slate-50 transition">
+                            Explore Courses
+                        </button>
+                    </div>
+                </div>
+                <!-- Contextual Threat Stats -->
+                <div class="bg-slate-50 p-8 rounded-2xl border border-slate-100 shadow-inner">
+                    <h3 class="text-lg font-bold text-slate-900 mb-6 border-b border-slate-200 pb-2">Why This Matters Now</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-rose-100 text-rose-600 text-xl">⚠️</div>
+                            <div class="ml-4">
+                                <h4 class="text-base font-semibold text-slate-900">
+                                    <a href="https://youtu.be/giT0ytynSqg?t=731" target="_blank" class="hover:text-indigo-600 hover:underline transition-colors">Ransomware & AI</a>
+                                </h4>
+                                <p class="text-sm text-slate-500">Threats are automated. The time from intrusion to data loss is shrinking rapidly.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-amber-100 text-amber-600 text-xl">📉</div>
+                            <div class="ml-4">
+                                <h4 class="text-base font-semibold text-slate-900">
+                                    <a href="cyber_sourses.html" target="_blank" class="hover:text-indigo-600 hover:underline transition-colors">The Talent Gap</a>
+                                </h4>
+                                <p class="text-sm text-slate-500">Employers aren't looking for generalists. They need specialists in Defense, Forensics, and Incident Response.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 text-xl">🛡️</div>
+                            <div class="ml-4">
+                                <h4 class="text-base font-semibold text-slate-900">Beyond "General IT"</h4>
+                                <p class="text-sm text-slate-500">Building the network is step one. Protecting it from active hijackers is the new necessity.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Curriculum Section -->
+        <section id="curriculum" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-slate-900">The 675-Hour Curriculum</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+                    Analyze the program structure. We move from foundations to advanced tooling, culminating in a massive 180-hour Capstone project.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12">
+                
+                <!-- Chart Column -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4 text-center">Program Phase Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="curriculumChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-slate-400 mt-4">Click segments to see phase details.</p>
+                </div>
+
+                <!-- Details Column -->
+                <div class="flex flex-col justify-center">
+                    <div id="phaseDetails" class="bg-indigo-50 border-l-4 border-indigo-500 p-6 rounded-r-lg transition-all duration-300">
+                        <h4 class="text-xl font-bold text-indigo-900 mb-2" id="phaseTitle">Program Overview</h4>
+                        <p class="text-slate-700 mb-4" id="phaseDesc">
+                            The program consists of 675 total hours divided into three critical phases. Hover over or click the chart on the left to explore the specific courses within each phase.
+                        </p>
+                        <ul class="space-y-2" id="phaseList">
+                            <li class="flex items-center text-sm text-slate-600">
+                                <span class="w-2 h-2 bg-indigo-400 rounded-full mr-2"></span>
+                                Total Hours: 675
+                            </li>
+                            <li class="flex items-center text-sm text-slate-600">
+                                <span class="w-2 h-2 bg-indigo-400 rounded-full mr-2"></span>
+                                Emphasis: Hands-on Labs & Capstone
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Course Intensity Chart (Mini) -->
+                    <div class="mt-8">
+                         <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Course Intensity (Top Modules)</h3>
+                         <div class="chart-container" style="height: 250px;">
+                             <canvas id="intensityChart"></canvas>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Career Pathways Simulator -->
+        <section id="pathways" class="bg-slate-900 text-white py-16">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold">Simulate Your Career Path</h2>
+                    <p class="mt-4 text-slate-400">Select your current background to see how this certificate upgrades your career.</p>
+                </div>
+
+                <!-- Simulator Controls -->
+                <div class="flex justify-center space-x-4 mb-12">
+                    <button id="btn-net" onclick="setPathway('network')" class="flex items-center px-6 py-4 rounded-xl border-2 border-indigo-500 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-100 font-bold transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        <span class="text-2xl mr-3">🔌</span> Network Admin Student
+                    </button>
+                    <button id="btn-dev" onclick="setPathway('dev')" class="flex items-center px-6 py-4 rounded-xl border-2 border-slate-700 bg-slate-800 text-slate-400 hover:border-indigo-500 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        <span class="text-2xl mr-3">💻</span> Software Dev Student
+                    </button>
+                </div>
+
+                <!-- Dynamic Outcome Cards -->
+                <div class="grid md:grid-cols-3 gap-8" id="pathway-content">
+                    <!-- Transformation -->
+                    <div class="bg-slate-800 p-8 rounded-xl border border-slate-700">
+                        <h3 class="text-indigo-400 font-semibold uppercase tracking-wide text-sm mb-2">The Transformation</h3>
+                        <h4 class="text-2xl font-bold mb-4" id="path-transform-title">Network Security Engineer</h4>
+                        <p class="text-slate-300 leading-relaxed" id="path-transform-desc">
+                            You already understand TCP/IP, routing, and infrastructure. This certificate teaches you how to filter the poison out of the water you built.
+                        </p>
+                    </div>
+
+                    <!-- Key Skills -->
+                    <div class="bg-slate-800 p-8 rounded-xl border border-slate-700">
+                        <h3 class="text-emerald-400 font-semibold uppercase tracking-wide text-sm mb-2">New Superpowers</h3>
+                        <ul class="space-y-3 mt-4" id="path-skills">
+                            <li class="flex items-start"><span class="mr-2 text-emerald-400">✓</span> Firewall Hardening</li>
+                            <li class="flex items-start"><span class="mr-2 text-emerald-400">✓</span> Packet Analysis</li>
+                            <li class="flex items-start"><span class="mr-2 text-emerald-400">✓</span> Intrusion Detection</li>
+                        </ul>
+                    </div>
+
+                    <!-- Job Roles -->
+                    <div class="bg-slate-800 p-8 rounded-xl border border-slate-700">
+                        <h3 class="text-amber-400 font-semibold uppercase tracking-wide text-sm mb-2">Target Roles</h3>
+                        <div class="flex flex-wrap gap-2 mt-4" id="path-roles">
+                            <span class="px-3 py-1 rounded-full bg-slate-700 text-sm border border-slate-600">SOC Analyst</span>
+                            <span class="px-3 py-1 rounded-full bg-slate-700 text-sm border border-slate-600">Network Defender</span>
+                            <span class="px-3 py-1 rounded-full bg-slate-700 text-sm border border-slate-600">Security Admin</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Capstone Deep Dive -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl shadow-xl overflow-hidden text-white">
+                <div class="grid md:grid-cols-2">
+                    <div class="p-12 flex flex-col justify-center">
+                        <h2 class="text-3xl font-bold mb-6">The Capstone Project</h2>
+                        <p class="text-indigo-100 text-lg mb-6">
+                            180 Hours. Part A & Part B. This isn't just an exam; it's your portfolio. You will secure a complex environment, simulate attacks, and defend your architecture.
+                        </p>
+                        <ul class="space-y-3 mb-8">
+                            <li class="flex items-center">
+                                <span class="bg-indigo-500 rounded-full p-1 mr-3 text-xs">✓</span>
+                                Real-world simulation
+                            </li>
+                            <li class="flex items-center">
+                                <span class="bg-indigo-500 rounded-full p-1 mr-3 text-xs">✓</span>
+                                Full reporting and documentation
+                            </li>
+                            <li class="flex items-center">
+                                <span class="bg-indigo-500 rounded-full p-1 mr-3 text-xs">✓</span>
+                                Interview-ready experience
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-white/10 p-12 flex items-center justify-center">
+                        <!-- Simple visual representation of time allocation -->
+                        <div class="w-full">
+                            <div class="flex justify-between text-sm font-medium mb-2">
+                                <span>Part A: Design & Secure</span>
+                                <span>90 Hours</span>
+                            </div>
+                            <div class="w-full bg-black/20 rounded-full h-4 mb-6">
+                                <div class="bg-white rounded-full h-4" style="width: 100%"></div>
+                            </div>
+                            
+                            <div class="flex justify-between text-sm font-medium mb-2">
+                                <span>Part B: Attack & Defend</span>
+                                <span>90 Hours</span>
+                            </div>
+                            <div class="w-full bg-black/20 rounded-full h-4">
+                                <div class="bg-emerald-400 rounded-full h-4" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Logistics & Footer -->
+        <section id="logistics" class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center pb-8">
+            <h2 class="text-2xl font-bold text-slate-900 mb-8">Ready to Specialize?</h2>
+            <div class="grid md:grid-cols-2 gap-6 mb-12">
+                <div class="p-6 bg-white border border-slate-200 rounded-xl hover:border-indigo-500 transition-colors cursor-pointer group">
+                    <h3 class="font-bold text-lg text-slate-800 group-hover:text-indigo-600">Full-Time</h3>
+                    <p class="text-sm text-slate-500 mt-2">Fast-track your entry into the workforce immediately after graduation.</p>
+                </div>
+                <div class="p-6 bg-white border border-slate-200 rounded-xl hover:border-indigo-500 transition-colors cursor-pointer group">
+                    <h3 class="font-bold text-lg text-slate-800 group-hover:text-indigo-600">Part-Time</h3>
+                    <p class="text-sm text-slate-500 mt-2">Upskill while working. Flexible evening and weekend options.</p>
+                </div>
+            </div>
+            <p class="text-slate-400 text-sm">
+                Source: Internal Curriculum Report (ITCE/ITCS Series) & Program Launch Presentation.
+            </p>
+        </section>
+
+    </main>
+
+    <script>
+        // --- DATA STORAGE ---
+        // Sourced from 'cathy - final.txt'
+        const curriculumData = {
+            phases: [
+                {
+                    id: 'foundations',
+                    label: 'Foundations & Tooling',
+                    hours: 285,
+                    color: '#6366f1', // Indigo 500
+                    courses: [
+                        { code: 'ITCE-8000', name: 'System Security Fundamentals', hours: 45 },
+                        { code: 'ITCE-8001', name: 'Shell Scripting Foundations', hours: 45 },
+                        { code: 'ITCE-8002', name: 'Introduction to Python', hours: 60 },
+                        { code: 'ITCE-8003', name: 'Cybersecurity Legislation', hours: 45 },
+                        { code: 'ITCE-8004', name: 'Lab Design and Automation', hours: 45 },
+                        { code: 'ITCE-8005', name: 'Tools for Pen-Testing', hours: 45 }
+                    ],
+                    desc: "Building the builder's toolkit. We cover Python, Shell Scripting, and Legal frameworks (GDPR) before touching a keyboard in anger. This phase ensures you can automate your security tools."
+                },
+                {
+                    id: 'core',
+                    label: 'Core Operations',
+                    hours: 210,
+                    color: '#ec4899', // Pink 500
+                    courses: [
+                        { code: 'ITCS-8000', name: 'Ethical Hacker', hours: 90 },
+                        { code: 'ITCS-8001', name: 'Cybersecurity Defense', hours: 60 },
+                        { code: 'ITCS-8002', name: 'Incident Handling and Forensics', hours: 60 }
+                    ],
+                    desc: "The meat of the program. Learn to attack (Ethical Hacking) to better understand Defense. Dive into Incident Response (Fire Drills) and Forensics (Detective Work)."
+                },
+                {
+                    id: 'capstone',
+                    label: 'The Capstone',
+                    hours: 180,
+                    color: '#10b981', // Emerald 500
+                    courses: [
+                        { code: 'ITCS-8003', name: 'Cybersecurity Capstone Part A', hours: 90 },
+                        { code: 'ITCS-8004', name: 'Cybersecurity Capstone Part B', hours: 90 }
+                    ],
+                    desc: "The crown jewel. 180 hours of project work. You will likely build a full environment, secure it, simulate attacks against it, and produce professional reports. This is your portfolio."
+                }
+            ]
+        };
+
+        const pathwaysData = {
+            network: {
+                title: "Network Security Engineer",
+                desc: "You already understand TCP/IP, routing, and infrastructure. This Certificate turns you into a Network Security Engineer. You already know how the traffic moves; we teach you how to filter the poison out of the water.",
+                skills: ["Network Hardening", "Firewall Configuration", "Packet Analysis", "Infrastructure Defense"],
+                roles: ["SOC Analyst", "Network Defender", "Security Admin", "Infrastructure Security"]
+            },
+            dev: {
+                title: "AppSec / DevSecOps Engineer",
+                desc: "You understand logic, code structure, and databases. With our Python and Automation modules, this Certificate turns you into an Application Security Specialist. You become the person who ensures the code is secure by design.",
+                skills: ["Secure Coding Practices", "Automated Security Testing", "Python for Security", "Vulnerability Assessment"],
+                roles: ["Application Security Specialist", "DevSecOps Engineer", "Penetration Tester", "Code Auditor"]
+            }
+        };
+
+        // --- CHART INITIALIZATION ---
+        
+        // 1. Doughnut Chart (Phases)
+        const ctxDonut = document.getElementById('curriculumChart').getContext('2d');
+        const donutChart = new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: {
+                labels: curriculumData.phases.map(p => p.label),
+                datasets: [{
+                    data: curriculumData.phases.map(p => p.hours),
+                    backgroundColor: curriculumData.phases.map(p => p.color),
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.label}: ${context.raw} Hours`;
+                            }
+                        }
+                    }
+                },
+                onClick: (evt, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        updatePhaseDetails(index);
+                    }
+                }
+            }
+        });
+
+        // 2. Horizontal Bar Chart (Intensity)
+        // Extract top 5 longest courses
+        const allCourses = curriculumData.phases.flatMap(p => p.courses);
+        const topCourses = allCourses.sort((a, b) => b.hours - a.hours).slice(0, 5);
+
+        const ctxBar = document.getElementById('intensityChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: topCourses.map(c => {
+                    // Truncate long names for chart labels
+                    return c.name.length > 20 ? c.name.substring(0, 20) + '...' : c.name;
+                }),
+                datasets: [{
+                    label: 'Contact Hours',
+                    data: topCourses.map(c => c.hours),
+                    backgroundColor: '#6366f1',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // --- INTERACTION LOGIC ---
+
+        function updatePhaseDetails(index) {
+            const phase = curriculumData.phases[index];
+            
+            // Animate transition
+            const container = document.getElementById('phaseDetails');
+            container.style.opacity = '0';
+            
+            setTimeout(() => {
+                // Color update
+                container.className = `bg-indigo-50 border-l-4 p-6 rounded-r-lg transition-all duration-300`;
+                container.style.borderColor = phase.color;
+                
+                // Text update
+                document.getElementById('phaseTitle').innerText = phase.label;
+                document.getElementById('phaseTitle').style.color = phase.color === '#ec4899' ? '#831843' : (phase.color === '#10b981' ? '#064e3b' : '#312e81'); // Darken text based on bg
+                
+                document.getElementById('phaseDesc').innerText = phase.desc;
+                
+                // List update
+                const list = document.getElementById('phaseList');
+                list.innerHTML = ''; // clear
+                
+                // Total hours item
+                const hourItem = document.createElement('li');
+                hourItem.className = 'flex items-center text-sm text-slate-700 font-semibold mb-2';
+                hourItem.innerHTML = `<span class="w-2 h-2 rounded-full mr-2" style="background-color: ${phase.color}"></span> Total Phase Hours: ${phase.hours}`;
+                list.appendChild(hourItem);
+
+                // Courses
+                phase.courses.forEach(c => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center text-sm text-slate-600 border-b border-slate-200 py-1';
+                    li.innerHTML = `<span>${c.name}</span> <span class="text-xs bg-white px-2 py-0.5 rounded border border-slate-200">${c.hours}h</span>`;
+                    list.appendChild(li);
+                });
+
+                container.style.opacity = '1';
+            }, 300);
+        }
+
+        function setPathway(type) {
+            const data = pathwaysData[type];
+            const btnNet = document.getElementById('btn-net');
+            const btnDev = document.getElementById('btn-dev');
+
+            // Style buttons
+            if (type === 'network') {
+                btnNet.className = "flex items-center px-6 py-4 rounded-xl border-2 border-indigo-500 bg-indigo-600/20 text-indigo-900 font-bold transition-all";
+                btnDev.className = "flex items-center px-6 py-4 rounded-xl border-2 border-slate-200 bg-white text-slate-400 hover:border-indigo-500 hover:text-slate-600 transition-all";
+            } else {
+                btnDev.className = "flex items-center px-6 py-4 rounded-xl border-2 border-indigo-500 bg-indigo-600/20 text-indigo-900 font-bold transition-all";
+                btnNet.className = "flex items-center px-6 py-4 rounded-xl border-2 border-slate-200 bg-white text-slate-400 hover:border-indigo-500 hover:text-slate-600 transition-all";
+            }
+
+            // Animate content replacement
+            const content = document.getElementById('pathway-content');
+            content.style.opacity = '0.5';
+            
+            setTimeout(() => {
+                document.getElementById('path-transform-title').innerText = data.title;
+                document.getElementById('path-transform-desc').innerText = data.desc;
+                
+                // Update Skills
+                const skillsList = document.getElementById('path-skills');
+                skillsList.innerHTML = data.skills.map(s => `<li class="flex items-start"><span class="mr-2 text-emerald-400">✓</span> ${s}</li>`).join('');
+                
+                // Update Roles
+                const rolesContainer = document.getElementById('path-roles');
+                rolesContainer.innerHTML = data.roles.map(r => `<span class="px-3 py-1 rounded-full bg-slate-700 text-sm border border-slate-600">${r}</span>`).join('');
+                
+                content.style.opacity = '1';
+            }, 200);
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize default view
+        setPathway('network');
+    </script>
+</body>
+</html>
